@@ -64,7 +64,6 @@ func getPokemonApiById(id int, wg *sync.WaitGroup, results chan<- ApiPokemon) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(apiPokemon)
 
 	results <- apiPokemon
 }
@@ -115,12 +114,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	pokemons, err := models.GetPokemons()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(pokemons)
 
 	log.Println("end")
 }
