@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go_pokemon/cmd/models"
+	"go_pokemon/pkg/models"
 	"go_pokemon/utils"
 	"io"
 	"log"
