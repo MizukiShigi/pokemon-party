@@ -1,0 +1,50 @@
+version: "3"
+services:
+  go_pokemon:
+    container_name: go_pokemon
+    build: 
+      context: ./build/go
+      dockerfile: Dockerfile
+    tty: true
+    volumes:
+      - type: bind
+        source: ./src
+        target: /go/src/app
+    env_file:
+      - ./build/go/.env
+      - ./build/mysql/.env
+    environment:
+      TZ: Asia/Tokyo
+    networks:
+      - go_network
+
+  db:
+    container_name: db
+    build:
+      context: ./build/mysql
+      dockerfile: Dockerfile
+    tty: true
+    platform: linux/x86_64
+    ports:
+      - 3306:3306
+    env_file:
+      - ./build/mysql/.env
+    volumes:
+      - type: volume
+        source: mysql_volume
+        target: /var/lib/mysql
+      - type: bind
+        source: ./build/mysql/init
+        target: /docker-entrypoint-initdb.d
+    environment:
+      TZ: Asia/Tokyo
+    networks:
+      - go_network
+
+volumes:
+  mysql_volume:
+    name: mysql_volume
+
+networks:
+  go_network:
+    external: true

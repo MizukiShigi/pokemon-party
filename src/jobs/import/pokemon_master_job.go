@@ -1,0 +1,126 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"go_pokemon/cmd/models"
+	"go_pokemon/utils"
+	"io"
+	"log"
+	"net/http"
+	"sync"
+	"time"
+)
+
+const logFilePath = "./logs/"
+const startID = 1
+const endID = 151
+const pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon"
+
+type ApiPokemon struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Types []struct {
+		Type struct {
+			Name string `json:"name"`
+		} `json:"type"`
+	} `json:"types"`
+	Height         int `json:"height"`
+	Weight         int `json:"weight"`
+	BaseExperience int `json:"base_experience"`
+	Sprites        struct {
+		Other struct {
+			OfficialArtwork struct {
+				FrontDefault string `json:"front_default"`
+			} `json:"official-artwork"`
+		} `json:"other"`
+	} `json:"sprites"`
+}
+
+func init() {
+	day := time.Now()
+	logFile := "pokemon_master_job" + day.Format("20060102") + ".log"
+	utils.LoggingSetting(logFilePath + logFile)
+}
+
+func getPokemonApiById(id int, wg *sync.WaitGroup, results chan<- ApiPokemon) {
+	defer wg.Done()
+
+	url := fmt.Sprintf(pokemonApiUrl+"/%d", id)
+	log.Println(url)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var apiPokemon ApiPokemon
+	err = json.Unmarshal(body, &apiPokemon)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(apiPokemon)
+
+	results <- apiPokemon
+}
+
+func main() {
+	defer utils.CloseLogFile()
+	log.Println("start")
+
+	// pokemon api呼び出し（リトライ3回）
+	var wg sync.WaitGroup
+	//   APIで取得したポケモンを格納するバッファ151個のチャネルを作成
+	results := make(chan ApiPokemon, endID-startID+1)
+
+	for i := startID; i <= endID; i++ {
+		wg.Add(1)
+		go getPokemonApiById(i, &wg, results)
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// DB登録
+	models.ConnectDB()
+	defer models.CloseDb()
+
+	var insertPokemons []models.Pokemon
+
+	for result := range results {
+		insertPokemon := models.Pokemon{
+			PokemonNumber:  result.ID,
+			Name:           result.Name,
+			Type1:          result.Types[0].Type.Name,
+			Height:         float64(result.Height),
+			Weight:         float64(result.Weight),
+			BaseExperience: result.BaseExperience,
+			ImageUrl:       result.Sprites.Other.OfficialArtwork.FrontDefault,
+		}
+
+		if len(result.Types) > 1 {
+			insertPokemon.Type2 = result.Types[1].Type.Name
+		}
+		insertPokemons = append(insertPokemons, insertPokemon)
+	}
+
+	err := models.InsertPokeomons(insertPokemons)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	pokemons, err := models.GetPokemons()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(pokemons)
+
+	log.Println("end")
+}
