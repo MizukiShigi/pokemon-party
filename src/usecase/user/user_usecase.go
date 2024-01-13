@@ -26,6 +26,9 @@ func (uu *UserUsecase) GetUser(user *domain.User) error {
 }
 
 func (uu *UserUsecase) CreateUser(user *domain.User) (error) {
+	if err := uu.uv.CreateUserValidate(*user); err != nil {
+		return err
+	}
 	if err := uu.ur.CreateUser(user); err != nil {
 		return err
 	}
