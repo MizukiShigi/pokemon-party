@@ -2,29 +2,22 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
-	"fmt"
 	"log"
 
 	"github.com/MizukiShigi/go_pokemon/domain"
 )
 
-type IUserRepository interface {
-	GetUser(user *domain.User, id int) error
-	CreateUser(user *domain.User) error
-}
-
 type UserRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) IUserRepository {
+func NewUserRepository(db *sql.DB) domain.IUserRepository {
 	return &UserRepository{db}
 }
 
-func (ur *UserRepository) GetUser(user *domain.User, id int) error {
+func (ur *UserRepository) GetUser(user *domain.User) error {
 	cmd := "SELECT id, name, email FROM users WHERE id = ?"
-	if err := ur.db.QueryRow(cmd, id).Scan(&user.ID, &user.Name, &user.Email); err != nil {
+	if err := ur.db.QueryRow(cmd, user.ID).Scan(&user.ID, &user.Name, &user.Email); err != nil {
 		log.Println(err)
 		return err
 	}
@@ -37,12 +30,10 @@ func (ur *UserRepository) CreateUser(user *domain.User) error {
 	if err != nil {
 		return err
 	}
-	rows, err := result.RowsAffected()
+	id, err := result.LastInsertId()
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	if rows != 1 {
-		return errors.New(fmt.Sprintf("expected to affect 1 row, affected %d", rows))
-	}
+	user.ID = int(id)
 	return nil
 }

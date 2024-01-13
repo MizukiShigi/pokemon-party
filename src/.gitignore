@@ -1,2 +1,3 @@
 log/*
 job/import/log/*
+*.log

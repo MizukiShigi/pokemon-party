@@ -14,25 +14,20 @@ func NewUserUsecase(ur domain.IUserRepository, uv user.IUserValidator) domain.IU
 	return &UserUsecase{ur, uv}
 }
 
-func (uu *UserUsecase) GetUser(user domain.User) (domain.User, error) {
-	if err := uu.uv.GetUserValidate(user); err != nil {
-		return domain.User{}, err
+func (uu *UserUsecase) GetUser(user *domain.User) error {
+	if err := uu.uv.GetUserValidate(*user); err != nil {
+		return err
 	}
-	storedUser := domain.User{}
-	err := uu.ur.GetUser(&storedUser, user.ID)
+	err := uu.ur.GetUser(user)
 	if err != nil {
-		return domain.User{}, err
+		return err
 	}
-	return storedUser, nil
+	return nil
 }
 
-func (uu *UserUsecase) CreateUser(user domain.User) (domain.User, error) {
-	// newUser := domain.User{
-	// 	Name: user.Name,
-	// 	Email: user.Email,
-	// }
-	if err := uu.ur.CreateUser(&user); err != nil {
-		return domain.User{}, err
+func (uu *UserUsecase) CreateUser(user *domain.User) (error) {
+	if err := uu.ur.CreateUser(user); err != nil {
+		return err
 	}
-	return user, nil
+	return nil
 }
