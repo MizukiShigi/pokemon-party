@@ -18,8 +18,12 @@ func NewUserRepository(db *sql.DB) domain.IUserRepository {
 func (ur *UserRepository) GetUser(user *domain.User) error {
 	cmd := "SELECT id, name, email FROM users WHERE id = ?"
 	if err := ur.db.QueryRow(cmd, user.ID).Scan(&user.ID, &user.Name, &user.Email); err != nil {
-		log.Println(err)
-		return err
+		if err == sql.ErrNoRows {
+			myError := domain.NewMyError(domain.NotFound, "user data")
+			return myError
+		} else {
+			return err
+		}
 	}
 	return nil
 }

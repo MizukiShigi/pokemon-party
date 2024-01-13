@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,17 +19,20 @@ type IUserHandler interface {
 type UserHandler struct {
 	uu domain.IUserUsecase
 }
-
-type UserResponse struct {
-	Status     string `json:"status"`
-	StatusCode int    `json:"status_code"`
+type UserDetail struct {
 	ID         int    `json:"id"`
 	Name       string `json:"name"`
 	Email      string `json:"email"`
 }
 
+type UserResponse struct {
+	Status     string `json:"status"`
+	StatusCode int    `json:"status_code"`
+	User UserDetail `json:"user"`
+}
+
 func NewUserResponse(id int, name string, email string) *UserResponse {
-	return &UserResponse{"ok", 200, id, name, email}
+	return &UserResponse{"ok", 200, UserDetail{ID: id, Name: name, Email: email}}
 }
 
 func NewUserHandler(uu domain.IUserUsecase) IUserHandler {
@@ -63,18 +67,7 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	user := domain.User{ID: userId}
 	err = uh.uu.GetUser(&user)
 	if err != nil {
-		if myError, ok := err.(domain.MyError); ok {
-			errorRes := domain.NewErrorResponse(myError)
-			jsonErrorRes, err := json.Marshal(errorRes)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(jsonErrorRes)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 	resUser := NewUserResponse(user.ID, user.Name, user.Email)
@@ -91,31 +84,12 @@ func (uh *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser domain.User
 	err := json.NewDecoder(r.Body).Decode(&newUser)
 	if err != nil {
-		myError := domain.NewMyError(domain.InvalidInput, "post data")
-		errorRes := domain.NewErrorResponse(myError)
-		jsonErrorRes, err := json.Marshal(errorRes)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonErrorRes)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	err = uh.uu.CreateUser(&newUser)
 	if err != nil {
-		if myError, ok := err.(domain.MyError); ok {
-			errorRes := domain.NewErrorResponse(myError)
-			jsonErrorRes, err := json.Marshal(errorRes)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(jsonErrorRes)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 	resUser := NewUserResponse(newUser.ID, newUser.Email, newUser.Name)
@@ -126,4 +100,20 @@ func (uh *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonRes)
+}
+
+func writeError(w http.ResponseWriter, err error) {
+	var myError domain.MyError
+	if errors.As(err, &myError) {
+		errorRes := domain.NewErrorResponse(myError)
+		jsonErrorRes, err := json.Marshal(errorRes)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonErrorRes)
+		return
+	}
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
