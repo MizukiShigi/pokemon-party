@@ -13,11 +13,11 @@ type User struct {
 }
 
 type IUserUsecase interface {
-	GetUser(user User) (User, error)
-	CreateUser(user User) (User, error)
+	GetUser(user *User) error
+	CreateUser(user *User) error
 }
 
 type IUserRepository interface {
-	GetUser(user *User, id int) error
+	GetUser(user *User) error
 	CreateUser(user *User) error
 }
