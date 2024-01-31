@@ -20,15 +20,15 @@ type UserHandler struct {
 	uu domain.IUserUsecase
 }
 type UserDetail struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type UserResponse struct {
-	Status     string `json:"status"`
-	StatusCode int    `json:"status_code"`
-	User UserDetail `json:"user"`
+	Status     string     `json:"status"`
+	StatusCode int        `json:"status_code"`
+	User       UserDetail `json:"user"`
 }
 
 func NewUserResponse(id int, name string, email string) *UserResponse {
