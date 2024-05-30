@@ -19,7 +19,7 @@ const startID = 1
 const endID = 151
 const pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon"
 
-// TODO: 複数の構造体に分割する
+// TODO: 複数の構造体に分割して扱いやすくしたい
 type ApiPokemon struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
@@ -45,7 +45,7 @@ func init() {
 	logFile := "pokemon_master_job" + day.Format("20060102") + ".log"
 	util.LoggingSetting(logFilePath + logFile)
 }
-
+ 
 func getPokemonApiById(id int, wg *sync.WaitGroup, results chan<- ApiPokemon) {
 	defer wg.Done()
 
@@ -80,6 +80,7 @@ func main() {
 	//   APIで取得したポケモンを格納するバッファ151個のチャネルを作成
 	results := make(chan ApiPokemon, endID-startID+1)
 
+	// TODO: error groupを使ってエラーハンドリングする
 	for i := startID; i <= endID; i++ {
 		wg.Add(1)
 		go getPokemonApiById(i, &wg, results)
