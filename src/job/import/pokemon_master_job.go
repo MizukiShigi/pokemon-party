@@ -19,6 +19,7 @@ const startID = 1
 const endID = 151
 const pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon"
 
+// TODO: 複数の構造体に分割する
 type ApiPokemon struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
