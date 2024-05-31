@@ -80,7 +80,6 @@ func main() {
 	//   APIで取得したポケモンを格納するバッファ151個のチャネルを作成
 	results := make(chan ApiPokemon, endID-startID+1)
 
-	// TODO: error groupを使ってエラーハンドリングする
 	for i := startID; i <= endID; i++ {
 		wg.Add(1)
 		go getPokemonApiById(i, &wg, results)
