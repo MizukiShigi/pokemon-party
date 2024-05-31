@@ -15,3 +15,6 @@ jobs:
 
       - name: TODO to Issue
         uses: alstr/todo-to-issue-action@v4.13
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
