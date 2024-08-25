@@ -1,8 +1,13 @@
 package user
 
 import (
+	"errors"
+	"time"
+
 	"github.com/MizukiShigi/go_pokemon/domain"
 	"github.com/MizukiShigi/go_pokemon/validator/user"
+	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUsecase struct {
@@ -14,23 +19,51 @@ func NewUserUsecase(ur domain.IUserRepository, uv user.IUserValidator) domain.IU
 	return &UserUsecase{ur, uv}
 }
 
-func (uu *UserUsecase) GetUser(user *domain.User) error {
-	if err := uu.uv.GetUserValidate(*user); err != nil {
-		return err
+func generateJwt(userId int) string {
+	claims := jwt.MapClaims{
+		"user_id": userId,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	}
-	err := uu.ur.GetUser(user)
-	if err != nil {
-		return err
-	}
-	return nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, _ := token.SignedString([]byte("SECRET"))
+	return tokenString
 }
 
-func (uu *UserUsecase) CreateUser(user *domain.User) (error) {
+func (uu *UserUsecase) Login(reqUser *domain.User) (string, error) {
+	dbUser, err := uu.ur.GetUserByEmail(reqUser.Email)
+	if err != nil {
+		return "", err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(reqUser.Password)); err != nil {
+		return "", err
+	}
+
+	token := generateJwt(dbUser.ID)
+
+	return token, nil
+}
+
+func (uu *UserUsecase) Register(user *domain.User) error {
 	if err := uu.uv.CreateUserValidate(*user); err != nil {
 		return err
 	}
-	if err := uu.ur.CreateUser(user); err != nil {
+
+	isDuplicate, err := uu.ur.CheckDuplicateEmail(user.Email)
+	if err != nil {
 		return err
 	}
-	return nil
+
+	if isDuplicate {
+		return errors.New("既に登録済みのユーザーです")
+	}
+
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(hashPass)
+
+	return uu.ur.CreateUser(user)
 }

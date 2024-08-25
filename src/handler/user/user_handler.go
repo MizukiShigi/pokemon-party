@@ -4,16 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/MizukiShigi/go_pokemon/domain"
 )
 
 type IUserHandler interface {
-	HandleUser(w http.ResponseWriter, r *http.Request)
-	GetUser(w http.ResponseWriter, r *http.Request)
-	CreateUser(w http.ResponseWriter, r *http.Request)
+	Login(w http.ResponseWriter, r *http.Request)
+	Register(w http.ResponseWriter, r *http.Request)
 }
 
 type UserHandler struct {
@@ -21,7 +18,6 @@ type UserHandler struct {
 }
 type UserDetail struct {
 	ID    int    `json:"id"`
-	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
@@ -31,46 +27,42 @@ type UserResponse struct {
 	User       UserDetail `json:"user"`
 }
 
-func NewUserResponse(id int, name string, email string) *UserResponse {
-	return &UserResponse{"ok", 200, UserDetail{ID: id, Name: name, Email: email}}
+type LoginUserResponse struct {
+	Status     string     `json:"status"`
+	StatusCode int        `json:"status_code"`
+	Jwt        string     `json:"jwt"`
+}
+
+func NewUserCreateResponse(id int, email string) *UserResponse {
+	return &UserResponse{"ok", 201, UserDetail{ID: id, Email: email}}
+}
+
+func NewLoginResponse(jwt string) *LoginUserResponse {
+	return &LoginUserResponse{"ok", 200, jwt}
 }
 
 func NewUserHandler(uu domain.IUserUsecase) IUserHandler {
 	return &UserHandler{uu}
 }
 
-func (uh *UserHandler) HandleUser(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		uh.GetUser(w, r)
-	case "POST":
-		uh.CreateUser(w, r)
-	default:
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-	}
-}
-
-func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	userId, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/users/"))
+func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var user domain.User
+	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		myError := domain.NewMyError(domain.InvalidInput, "user_id")
-		errorRes := domain.NewErrorResponse(myError)
-		jsonErrorRes, err := json.Marshal(errorRes)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonErrorRes)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	user := domain.User{ID: userId}
-	err = uh.uu.GetUser(&user)
+
+	jwt, err := uh.uu.Login(&user)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	resUser := NewUserResponse(user.ID, user.Name, user.Email)
+	if len(jwt) == 0 {
+		writeError(w, errors.New("failed to login"))
+		return
+	}
+	resUser := NewLoginResponse(jwt)
 	jsonRes, err := json.Marshal(resUser)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,25 +72,26 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonRes)
 }
 
-func (uh *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var newUser domain.User
 	err := json.NewDecoder(r.Body).Decode(&newUser)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = uh.uu.CreateUser(&newUser)
+	err = uh.uu.Register(&newUser)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	resUser := NewUserResponse(newUser.ID, newUser.Email, newUser.Name)
+	resUser := NewUserCreateResponse(newUser.ID, newUser.Email)
 	jsonRes, err := json.Marshal(resUser)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonRes)
 }
 

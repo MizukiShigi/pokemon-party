@@ -7,7 +7,6 @@ import (
 )
 
 type IUserValidator interface {
-	GetUserValidate(user domain.User) error
 	CreateUserValidate(user domain.User) error
 }
 
@@ -15,15 +14,6 @@ type userValidator struct{}
 
 func NewUserValidator() IUserValidator {
 	return &userValidator{}
-}
-
-func (uv *userValidator) GetUserValidate(user domain.User) error {
-	validate := validator.New()
-	if err := validate.Var(user.ID, "required"); err != nil {
-		myError := domain.NewMyError(domain.InvalidInput, "user_id")
-		return myError
-	}
-	return nil
 }
 
 func (uv *userValidator) CreateUserValidate(user domain.User) error {

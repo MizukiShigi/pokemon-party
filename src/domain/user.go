@@ -6,18 +6,19 @@ import (
 
 type User struct {
 	ID         int       `json:"id"`
-	Name       string    `json:"name" validate:"min=1,max=30"`
 	Email      string    `json:"email" validate:"email"`
+	Password   string    `json:"password" validate:"min=8,max=20"`
 	CreatedAt  time.Time `json:"created_at"`
 	ModifiedAt time.Time `json:"modified_at"`
 }
 
 type IUserUsecase interface {
-	GetUser(user *User) error
-	CreateUser(user *User) error
+	Login(user *User) (jwt string, err error)
+	Register(user *User) error
 }
 
 type IUserRepository interface {
-	GetUser(user *User) error
+	CheckDuplicateEmail(email string) (bool, error)
+	GetUserByEmail(email string) (User, error)
 	CreateUser(user *User) error
 }
