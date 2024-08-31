@@ -9,7 +9,7 @@ type User struct {
 	Email      string    `json:"email" validate:"email"`
 	Password   string    `json:"password" validate:"min=8,max=20"`
 	CreatedAt  time.Time `json:"created_at"`
-	ModifiedAt time.Time `json:"modified_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type IUserUsecase interface {

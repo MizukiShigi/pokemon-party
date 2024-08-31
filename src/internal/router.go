@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	_userHandler "github.com/MizukiShigi/go_pokemon/handler/user"
-	// _pokemonHandler "github.com/MizukiShigi/go_pokemon/handler/pokemon"
+	_pokemonHandler "github.com/MizukiShigi/go_pokemon/handler/pokemon"
 )
 
 func methodHandler(method string, h http.HandlerFunc) http.HandlerFunc {
@@ -22,9 +22,7 @@ func SetUserRouter(uh _userHandler.IUserHandler) {
 	http.HandleFunc("/login", methodHandler("POST", uh.Login))
 }
 
-// func SetPokemonRouter(ph _pokemonHandler.IPokemonHandler) {
-// 	// マスタポケモン1匹取得
-// 	http.HandleFunc("/pokemons/", ph.HandlePokemon)
-// 	// マスタポケモン複数匹取得
-// 	http.HandleFunc("/pokemons", ph.HandlePokemon)
-// }
+func SetPokemonRouter(ph _pokemonHandler.IPokemonHandler) {
+	http.HandleFunc("/pokemons/", Auth(methodHandler("GET", ph.GetPokemon)))
+	// http.HandleFunc("/pokemons/users/", methodHandler("GET", ph.HandlePokemon))
+}

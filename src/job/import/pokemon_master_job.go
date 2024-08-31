@@ -11,6 +11,7 @@ import (
 
 	"github.com/MizukiShigi/go_pokemon/domain"
 	"github.com/MizukiShigi/go_pokemon/infrastructure"
+	"github.com/MizukiShigi/go_pokemon/repository"
 	"github.com/MizukiShigi/go_pokemon/util"
 )
 
@@ -91,8 +92,8 @@ func main() {
 	}()
 
 	// DB登録
-	infrastructure.ConnectDB()
-	defer infrastructure.CloseDb()
+	db := infrastructure.ConnectDB()
+	defer infrastructure.CloseDb(db)
 
 	var insertPokemons []domain.Pokemon
 
@@ -113,7 +114,8 @@ func main() {
 		insertPokemons = append(insertPokemons, insertPokemon)
 	}
 
-	err := domain.InsertPokeomons(insertPokemons)
+	pr := repository.NewPokemonRepository(db)
+	err := pr.InsertPokeomons(insertPokemons)
 	if err != nil {
 		log.Fatalln(err)
 	}
