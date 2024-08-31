@@ -9,8 +9,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-var Db *sql.DB
-
 func ConnectDB() *sql.DB {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
@@ -33,6 +31,6 @@ func ConnectDB() *sql.DB {
 	return db
 }
 
-func CloseDb() {
-	Db.Close()
+func CloseDb(db *sql.DB) {
+	db.Close()
 }
