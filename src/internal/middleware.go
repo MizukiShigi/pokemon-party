@@ -7,20 +7,19 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo/v4"
 )
 
-func Auth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
+func Auth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		authHeader := c.Request().Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Authorization header is required")
 		}
 
 		bearerToken := strings.Split(authHeader, " ")
 		if len(bearerToken) != 2 {
-			http.Error(w, "Invalid token format", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token format")
 		}
 
 		strToken := bearerToken[1]
@@ -32,14 +31,12 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 			return []byte("SECRET"), nil
 		})
 		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || !token.Valid {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
-			return
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims")
 		}
 
 		now := time.Now().Unix()
@@ -47,11 +44,10 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 		// 有効期限チェック
 		if exp, ok := claims["exp"].(float64); ok {
 			if now > int64(exp) {
-				http.Error(w, "Expired token", http.StatusUnauthorized)
-				return
+				return echo.NewHTTPError(http.StatusUnauthorized, "Expired token")
 			}
 		}
 
-		next.ServeHTTP(w, r)
+		return next(c)
 	}
 }

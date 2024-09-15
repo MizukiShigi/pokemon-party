@@ -29,7 +29,7 @@ type ErrorResponse struct {
 type MyError struct {
 	StatusCode ErrorCode    `json:"status_code"`
 	Message    ErrorMessage `json:"message"`
-	Param      string       `json:"param"`
+	Param      string       `json:"param,omitempty"`
 	Detail     interface{}  `json:"error_detail,omitempty"`
 }
 

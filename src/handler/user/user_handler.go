@@ -1,16 +1,15 @@
 package user
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/MizukiShigi/go_pokemon/domain"
+	"github.com/labstack/echo/v4"
 )
 
 type IUserHandler interface {
-	Login(w http.ResponseWriter, r *http.Request)
-	Register(w http.ResponseWriter, r *http.Request)
+	Login(c echo.Context) error
+	Register(c echo.Context) error
 }
 
 type UserHandler struct {
@@ -28,9 +27,9 @@ type UserResponse struct {
 }
 
 type LoginUserResponse struct {
-	Status     string     `json:"status"`
-	StatusCode int        `json:"status_code"`
-	Jwt        string     `json:"jwt"`
+	Status     string `json:"status"`
+	StatusCode int    `json:"status_code"`
+	Jwt        string `json:"jwt"`
 }
 
 func NewUserCreateResponse(id int, email string) *UserResponse {
@@ -45,68 +44,34 @@ func NewUserHandler(uu domain.IUserUsecase) IUserHandler {
 	return &UserHandler{uu}
 }
 
-func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) Login(c echo.Context) error {
 	var user domain.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := c.Bind(&user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return c.String(http.StatusBadRequest, "bad request")
 	}
 
 	jwt, err := uh.uu.Login(&user)
 	if err != nil {
-		writeError(w, err)
-		return
+		return err
 	}
 	if len(jwt) == 0 {
-		writeError(w, errors.New("failed to login"))
-		return
+		return c.String(http.StatusBadRequest, "failed to login")
 	}
 	resUser := NewLoginResponse(jwt)
-	jsonRes, err := json.Marshal(resUser)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonRes)
+	return c.JSON(http.StatusOK, resUser)
 }
 
-func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) Register(c echo.Context) error {
 	var newUser domain.User
-	err := json.NewDecoder(r.Body).Decode(&newUser)
+	err := c.Bind(&newUser)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return c.String(http.StatusBadRequest, "bad request")
 	}
 	err = uh.uu.Register(&newUser)
 	if err != nil {
-		writeError(w, err)
-		return
+		return err
 	}
 	resUser := NewUserCreateResponse(newUser.ID, newUser.Email)
-	jsonRes, err := json.Marshal(resUser)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(jsonRes)
-}
-
-func writeError(w http.ResponseWriter, err error) {
-	var myError domain.MyError
-	if errors.As(err, &myError) {
-		errorRes := domain.NewErrorResponse(myError)
-		jsonErrorRes, err := json.Marshal(errorRes)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonErrorRes)
-		return
-	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	return c.JSON(http.StatusCreated, resUser)
 }
