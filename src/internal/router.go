@@ -1,28 +1,22 @@
 package internal
 
 import (
-	"net/http"
+	"github.com/labstack/echo/v4"
 
-	_userHandler "github.com/MizukiShigi/go_pokemon/handler/user"
 	_pokemonHandler "github.com/MizukiShigi/go_pokemon/handler/pokemon"
+	_userHandler "github.com/MizukiShigi/go_pokemon/handler/user"
 )
 
-func methodHandler(method string, h http.HandlerFunc) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
-        if r.Method != method {
-            http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-            return
-        }
-        h(w, r)
-    }
+func SetUserRouter(e *echo.Echo, uh _userHandler.IUserHandler) {
+	e.POST("/register", uh.Register)
+	e.POST("/login", uh.Login)
+	// http.HandleFunc("/register", methodHandler("POST", uh.Register))
+	// http.HandleFunc("/login", methodHandler("POST", uh.Login))
+	// http.HandleFunc("/users/", Auth(methodHandler("POST", uh.HandlePokemon)))
+
 }
 
-func SetUserRouter(uh _userHandler.IUserHandler) {
-	http.HandleFunc("/register", methodHandler("POST", uh.Register))
-	http.HandleFunc("/login", methodHandler("POST", uh.Login))
-}
-
-func SetPokemonRouter(ph _pokemonHandler.IPokemonHandler) {
-	http.HandleFunc("/pokemons/", Auth(methodHandler("GET", ph.GetPokemon)))
-	// http.HandleFunc("/pokemons/users/", methodHandler("GET", ph.HandlePokemon))
+func SetPokemonRouter(e *echo.Echo, ph _pokemonHandler.IPokemonHandler) {
+	m := e.Group("", Auth)
+	m.GET("/pokemons/:pokemon_number", ph.GetPokemon)
 }
