@@ -22,7 +22,7 @@ func CustomErrorHandler(err error, c echo.Context) {
 
 	// echoのエラーの場合
 	if he, ok := err.(*echo.HTTPError); ok {
-		c.JSON(he.Code, err)
+		c.JSON(he.Code, he.Message)
 		return
 	}
 
