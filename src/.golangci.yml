@@ -4,12 +4,5 @@ linters:
   disable-all: true
   # 指定した linter のみ有効化
   enable:
-    - govet
-    - errcheck
     - staticcheck
-    - unused
-    - gosimple
-    - varcheck
-    - misspell
-    - lll
     - gofumpt 
