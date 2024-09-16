@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+
 	_userHandler "github.com/MizukiShigi/go_pokemon/handler/user"
 	"github.com/MizukiShigi/go_pokemon/repository"
 	_userUsecase "github.com/MizukiShigi/go_pokemon/usecase/user"

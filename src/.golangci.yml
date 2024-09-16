@@ -5,4 +5,4 @@ linters:
   # 指定した linter のみ有効化
   enable:
     - staticcheck
-    - gofumpt 
+    - gofumpt

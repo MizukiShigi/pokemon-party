@@ -15,10 +15,12 @@ import (
 	"github.com/MizukiShigi/go_pokemon/util"
 )
 
-const logFilePath = "log/job/pokemon_master"
-const startID = 1
-const endID = 151
-const pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon"
+const (
+	logFilePath   = "log/job/pokemon_master"
+	startID       = 1
+	endID         = 151
+	pokemonApiUrl = "https://pokeapi.co/api/v2/pokemon"
+)
 
 // TODO: 複数の構造体に分割する
 type ApiPokemon struct {
@@ -46,7 +48,7 @@ func init() {
 	logFile := "pokemon_master_job" + day.Format("20060102") + ".log"
 	util.LoggingSetting(logFilePath + logFile)
 }
- 
+
 func getPokemonApiById(id int, wg *sync.WaitGroup, results chan<- ApiPokemon) {
 	defer wg.Done()
 
