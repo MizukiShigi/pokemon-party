@@ -111,7 +111,7 @@ func main() {
 		}
 
 		if len(result.Types) > 1 {
-			insertPokemon.Type2 = result.Types[1].Type.Name
+			insertPokemon.Type2 = &result.Types[1].Type.Name
 		}
 		insertPokemons = append(insertPokemons, insertPokemon)
 	}

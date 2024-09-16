@@ -20,7 +20,7 @@ type PokemonDetail struct {
 	PokemonNumber  int     `json:"pokemon_number"`
 	Name           string  `json:"name"`
 	Type1          string  `json:"type1"`
-	Type2          string  `json:"type2"`
+	Type2          *string  `json:"type2,omitempty"`
 	Height         float64 `json:"height"`
 	Weight         float64 `json:"weight"`
 	BaseExperience int     `json:"base_experience"`

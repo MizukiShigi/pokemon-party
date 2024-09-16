@@ -16,16 +16,25 @@ func CustomErrorHandler(err error, c echo.Context) {
 	//  独自エラーの場合
 	if errors.As(err, &myError) {
 		errorRes := domain.NewErrorResponse(myError)
-		c.JSON(http.StatusInternalServerError, errorRes)
+		err := c.JSON(http.StatusInternalServerError, errorRes)
+		if err != nil {
+			c.Logger().Error(err)
+		}
 		return
 	}
 
 	// echoのエラーの場合
 	if he, ok := err.(*echo.HTTPError); ok {
-		c.JSON(he.Code, he.Message)
+		err := c.JSON(he.Code, he.Message)
+		if err != nil {
+			c.Logger().Error(err)
+		}
 		return
 	}
 
 	// それ以外のエラーの場合
-	c.JSON(http.StatusInternalServerError, "Internal Server Error")
+	err = c.JSON(http.StatusInternalServerError, "Internal Server Error")
+	if err != nil {
+		c.Logger().Error(err)
+	}
 }

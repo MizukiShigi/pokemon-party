@@ -1,5 +1,6 @@
 log/*
 job/import/log/*
 *.log
+tmp/*
 
 .vscode

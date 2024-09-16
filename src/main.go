@@ -24,9 +24,9 @@ func main() {
 		},
 	}))
 
-	e.Use(middleware.Recover())
-
 	setupLogging(e)
+
+	e.Use(middleware.Recover())
 
 	db := infrastructure.ConnectDB()
 
