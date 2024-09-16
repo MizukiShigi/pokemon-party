@@ -1,7 +1,9 @@
 package domain
 
-type ErrorCode int
-type ErrorMessage string
+type (
+	ErrorCode    int
+	ErrorMessage string
+)
 
 const (
 	InvalidInput       ErrorCode = 1001

@@ -14,7 +14,6 @@ func SetUserRouter(e *echo.Echo, uh _userHandler.IUserHandler) {
 	// http.HandleFunc("/register", methodHandler("POST", uh.Register))
 	// http.HandleFunc("/login", methodHandler("POST", uh.Login))
 	// http.HandleFunc("/users/", Auth(methodHandler("POST", uh.HandlePokemon)))
-
 }
 
 func SetPokemonRouter(e *echo.Echo, ph _pokemonHandler.IPokemonHandler) {

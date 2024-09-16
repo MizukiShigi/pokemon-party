@@ -10,7 +10,7 @@ var logFile *os.File // パッケージ変数としてファイルポインタ�
 
 func LoggingSetting(logFilePath string) {
 	var err error
-	logFile, err = os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	logFile, err = os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0o666)
 	if err != nil {
 		panic("cannnot open " + logFilePath + ": " + err.Error())
 	}
