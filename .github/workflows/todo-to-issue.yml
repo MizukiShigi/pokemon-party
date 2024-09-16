@@ -14,17 +14,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: ^1.22
+          go-version: stable
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          golangci_lint_flags: "--config=.golangci.yml"
-          args: ./...
+          working-directory: ./src
+          args: "--config=.golangci.yml"
   
