@@ -4,17 +4,27 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  todo_to_issue:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: TODO to Issue
-        uses: alstr/todo-to-issue-action@v4.13
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          APP_ID: ${{ secrets.APP_ID }}
-          TOKEN: ${{ secrets.PRIVATE_KEY }}
+          go-version: ^1.22
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          golangci_lint_flags: "--config=.golangci.yml"
+          args: ./...
+  

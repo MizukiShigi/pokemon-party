@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/MizukiShigi/go_pokemon/util"
 	"gopkg.in/go-ini/ini.v1"
 )
 
@@ -15,7 +14,6 @@ var Config ConfigList
 
 func init() {
 	loadConfig()
-	util.LoggingSetting(Config.SystemLog)
 }
 
 func loadConfig() {

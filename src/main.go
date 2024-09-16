@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/MizukiShigi/go_pokemon/config"
@@ -13,33 +12,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.Recover())
+
 	e.Use(middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			return uuid.New().String()
 		},
 	}))
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}",
-		"host":"${host}","method":"${method}","uri":"${uri}","user_agent":"${user_agent}",
-		"status":${status},"error":"${error}","latency":${latency},"latency_human":"${latency_human}"` + "\n",
-		CustomTimeFormat: "2006-01-02 15:04:05",
-	}))
-	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		requestID := c.Response().Header().Get(echo.HeaderXRequestID)
-		log.Printf(
-			`{"id":"%s", "method":"%s", "uri":"%s", "request_body":"%s", "response_body":"%s"}` + "\n",
-			requestID,
-			c.Request().Method,
-			c.Request().RequestURI,
-			string(reqBody),
-			string(resBody),
-		)
-	}))
+
+	e.Use(middleware.Recover())
+
+	setupLogging(e)
 
 	db := infrastructure.ConnectDB()
 
@@ -51,8 +38,28 @@ func main() {
 
 	e.HTTPErrorHandler = handler.CustomErrorHandler
 
-	log.Printf("Starting server on %s\n", config.Config.Port)
+	e.Logger.Info("Starting server on %s\n", config.Config.Port)
 	if err := e.Start(":8080"); err != http.ErrServerClosed {
-		log.Fatal(err)
+		e.Logger.Fatal(err)
+	}
+}
+
+func setupLogging(e *echo.Echo) {
+	accessLogFile := newLoggerFile("./log/app/access.log")
+	systemLogFile := newLoggerFile("./log/app/system.log")
+
+	e.Logger.SetOutput(systemLogFile)
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Output: accessLogFile,
+	}))
+}
+
+func newLoggerFile(filename string) *lumberjack.Logger {
+	return &lumberjack.Logger{
+		Filename:   filename,
+		MaxSize:    1,
+		MaxBackups: 5,
+		MaxAge:     30,
+		Compress:   true,
 	}
 }
