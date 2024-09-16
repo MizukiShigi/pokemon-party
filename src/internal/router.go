@@ -10,6 +10,7 @@ import (
 func SetUserRouter(e *echo.Echo, uh _userHandler.IUserHandler) {
 	e.POST("/register", uh.Register)
 	e.POST("/login", uh.Login)
+	// e.GET("/users/:user_id/pokemons", uh.GetParty)
 	// http.HandleFunc("/register", methodHandler("POST", uh.Register))
 	// http.HandleFunc("/login", methodHandler("POST", uh.Login))
 	// http.HandleFunc("/users/", Auth(methodHandler("POST", uh.HandlePokemon)))

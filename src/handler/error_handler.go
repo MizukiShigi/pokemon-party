@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/MizukiShigi/go_pokemon/domain"
@@ -12,7 +11,7 @@ import (
 func CustomErrorHandler(err error, c echo.Context) {
 	var myError domain.MyError
 
-	log.Printf("Error: %v", err)
+	c.Logger().Error(err)
 
 	//  独自エラーの場合
 	if errors.As(err, &myError) {
