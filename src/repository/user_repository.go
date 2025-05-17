@@ -29,7 +29,6 @@ func (ur *UserRepository) GetUserByEmail(email string) (domain.User, error) {
 	return user, nil
 }
 
-// TODO: 連続で複数回インサートしたい時はdbではなくプリペアドステートメントを利用したい
 func (ur *UserRepository) CreateUser(user *domain.User) error {
 	cmd := "INSERT INTO users (email, password, created_at, updated_at) VALUES (?, ?, now(), now())"
 	result, err := ur.db.Exec(cmd, user.Email, user.Password)

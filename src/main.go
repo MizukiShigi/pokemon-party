@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/MizukiShigi/go_pokemon/config"
+	_partyDi "github.com/MizukiShigi/go_pokemon/di/party"
 	_pokemonDi "github.com/MizukiShigi/go_pokemon/di/pokemon"
 	_userDi "github.com/MizukiShigi/go_pokemon/di/user"
 	"github.com/MizukiShigi/go_pokemon/handler"
@@ -35,6 +36,9 @@ func main() {
 
 	pokemonHandler := _pokemonDi.InitPokemon(db)
 	internal.SetPokemonRouter(e, pokemonHandler)
+
+	partyHandler := _partyDi.InitParty(db)
+	internal.SetPartyRouter(e, partyHandler)
 
 	e.HTTPErrorHandler = handler.CustomErrorHandler
 
